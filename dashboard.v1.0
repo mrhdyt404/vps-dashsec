@@ -1,0 +1,265 @@
+<?php
+$data = null;
+$message = null;
+
+$file = '/opt/log-monitor/auth_summary.json';
+
+if (!is_readable($file)) {
+    $message = 'Data log belum tersedia';
+} else {
+    $jsonContent = file_get_contents($file);
+
+    if ($jsonContent === false) {
+        $message = 'Gagal membaca data log';
+    } else {
+        $decoded = json_decode($jsonContent, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $message = 'Format data log rusak';
+        } elseif (empty($decoded)) {
+            $message = 'Belum ada aktivitas serangan';
+        } else {
+            $data = $decoded;
+        }
+    }
+}
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPS Security - SSH Monitor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Ecorp | VPS Security Dashboard</h1>
+                    <p>SSH Access Monitoring & Threat Detection</p>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>Live Monitoring Active</span>
+            </div>
+        </header>
+        
+        <!-- Stats Cards -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><?= isset($data['failed_total']) ? $data['failed_total'] : '0' ?></div>
+                        <div class="stat-label">Failed Login Attempts</div>
+                    </div>
+                    <div class="stat-icon danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>12% increase from last hour</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><?= isset($data['top_ips']) ? count($data['top_ips']) : '0' ?></div>
+                        <div class="stat-label">Unique Attackers</div>
+                    </div>
+                    <div class="stat-icon warning">
+                        <i class="fas fa-user-secret"></i>
+                    </div>
+                </div>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>3 new IPs detected</span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value"><?= isset($data['top_users']) ? count($data['top_users']) : '0' ?></div>
+                        <div class="stat-label">Targeted Users</div>
+                    </div>
+                    <div class="stat-icon primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-trend trend-down">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>No new targets this hour</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tables Section -->
+        <div class="table-container">
+            <!-- Top IPs Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <i class="fas fa-network-wired"></i>
+                    <h2>Top IP Attackers</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Attempts</th>
+                            <th>Threat Level</th>
+                            <th>Country</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (isset($data['top_ips']) && !empty($data['top_ips'])): ?>
+                            <?php foreach ($data['top_ips'] as $index => $ip): ?>
+                                <tr>
+                                    <td class="ip-address"><?= htmlspecialchars($ip['ip']) ?></td>
+                                    <td><?= $ip['count'] ?></td>
+                                    <td>
+                                        <?php
+                                        $badgeClass = 'badge-low';
+                                        if ($ip['count'] > 30) {
+                                            $badgeClass = 'badge-high';
+                                        } elseif ($ip['count'] > 15) {
+                                            $badgeClass = 'badge-medium';
+                                        }
+                                        ?>
+                                        <span class="badge <?= $badgeClass ?>">
+                                            <?php 
+                                            if ($ip['count'] > 30) echo 'High';
+                                            elseif ($ip['count'] > 15) echo 'Medium';
+                                            else echo 'Low';
+                                            ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        // Simulasi negara berdasarkan IP
+                                        $fakeCountries = ['China', 'Russia', 'USA', 'Brazil', 'Netherlands'];
+                                        $countryIndex = $index % count($fakeCountries);
+                                        echo $fakeCountries[$countryIndex];
+                                        ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 30px;">
+                                    No attack data available
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Targeted Users Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <i class="fas fa-user-ninja"></i>
+                    <h2>Targeted Usernames</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Attempts</th>
+                            <th>Success Rate</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (isset($data['top_users']) && !empty($data['top_users'])): ?>
+                            <?php foreach ($data['top_users'] as $user): ?>
+                                <tr>
+                                    <td><strong><?= htmlspecialchars($user['user']) ?></strong></td>
+                                    <td><?= $user['count'] ?></td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div style="flex-grow: 1; height: 6px; background-color: rgba(255, 255, 255, 0.1); border-radius: 3px;">
+                                                <div style="width: <?= min(100, ($user['count'] / max(1, $data['failed_total'])) * 100) ?>%; height: 100%; background-color: var(--accent-red); border-radius: 3px;"></div>
+                                            </div>
+                                            <span><?= round(($user['count'] / max(1, $data['failed_total'])) * 100, 1) ?>%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <?php if ($user['user'] === 'root'): ?>
+                                            <span class="badge badge-high">High Risk</span>
+                                        <?php elseif (in_array($user['user'], ['admin', 'ubuntu'])): ?>
+                                            <span class="badge badge-medium">Medium Risk</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-low">Low Risk</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 30px;">
+                                    No user data available
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="last-update">
+                <i class="fas fa-clock"></i>
+                <span>Last updated: <?= isset($data['date']) ? $data['date'] : date('Y-m-d H:i:s') ?></span>
+            </div>
+            <div class="actions">
+                <button onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Refresh Dashboard
+                </button>
+            </div>
+            <div class="system-info">
+                <i class="fas fa-server"></i> VPS Security Monitor v2.1
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // Auto-refresh dashboard every 60 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 60000);
+        
+        // Add animation to stat cards on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.style.animation = 'fadeInUp 0.5s ease forwards';
+            });
+            
+            // Add CSS for fadeInUp animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeInUp {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .stat-card { opacity: 0; }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>

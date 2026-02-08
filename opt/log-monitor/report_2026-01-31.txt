@@ -1,0 +1,44 @@
+📊 LAPORAN KEAMANAN SSH - Sat Jan 31 23:30:19 WIB 2026
+===================================
+
+🔴 Top 10 IP gagal login:
+      4 103.211.200.18
+      3 91.224.92.78
+      3 91.224.92.74
+      3 91.224.92.54
+      3 91.224.92.190
+      3 91.224.92.108
+      3 45.227.254.170
+      3 45.148.10.157
+      3 45.148.10.152
+      3 45.148.10.147
+
+👤 Username paling sering diserang:
+     51 root
+     14 invalid
+
+🌍 Negara (reverse DNS / lookup):
+106.241.94.1.in-addr.arpa domain name pointer ecs-1-94-241-106.compute.hwclouds-dns.com.
+Host 18.200.211.103.in-addr.arpa. not found: 3(NXDOMAIN)
+Host 62.92.248.104.in-addr.arpa. not found: 3(NXDOMAIN)
+Host 91.249.141.121.in-addr.arpa. not found: 3(NXDOMAIN)
+130.97.25.123.in-addr.arpa domain name pointer static.vdc.vn.
+Host 134.225.190.146.in-addr.arpa. not found: 3(NXDOMAIN)
+Host 146.162.32.193.in-addr.arpa not found: 2(SERVFAIL)
+Host 15.110.178.195.in-addr.arpa. not found: 3(NXDOMAIN)
+25.121.57.2.in-addr.arpa domain name pointer hosting25.tronicsat.com.
+Host 238.122.57.2.in-addr.arpa not found: 2(SERVFAIL)
+
+🚨 IP diblokir fail2ban:
+Status for the jail: sshd
+|- Filter
+|  |- Currently failed:	2
+|  |- Total failed:	167
+|  `- File list:	/var/log/auth.log
+`- Actions
+   |- Currently banned:	29
+   |- Total banned:	31
+   `- Banned IP list:	91.202.233.33 176.120.22.13 92.118.39.76 176.65.132.23 92.118.39.72 92.118.39.56 91.224.92.108 92.118.39.95 195.178.110.15 91.224.92.78 91.224.92.190 91.224.92.74 2.57.121.25 45.148.10.152 213.209.159.159 213.209.159.158 45.148.10.157 45.148.10.141 45.148.10.147 2.57.122.238 1.94.241.106 193.32.162.146 121.141.249.91 91.224.92.54 68.183.199.108 146.190.225.134 104.248.92.62 45.227.254.170 206.189.15.170
+
+📈 Total percobaan gagal hari ini:
+65
