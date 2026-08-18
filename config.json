@@ -1,0 +1,53 @@
+{
+  "server": {
+    "port": 8443,
+    "public_ip": "103.179.56.154",
+    "hostname": "HNTR-VPS"
+  },
+  "whitelist": [
+    "127.0.0.1",
+    "::1",
+    "10.81.80.202",
+    "180.248.111.231",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16"
+  ],
+  "smtp": {
+    "enabled": true,
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "secure": false,
+    "user": "",
+    "pass": "",
+    "sender_email": "dashsec-security@hntr.local",
+    "sender_name": "DashSec VPS Defense",
+    "recipient_email": "mrhxxx7@gmail.com",
+    "notify_on_breach": true,
+    "notify_on_block": false,
+    "min_alert_interval_sec": 30
+  },
+  "detection": {
+    "ssh_max_attempts": 3,
+    "ssh_time_window_sec": 300,
+    "web_dos_threshold": 60,
+    "web_dos_window_sec": 10,
+    "auto_ban_duration_hours": 24,
+    "instant_ban_vectors": [
+      "SQL_INJECTION",
+      "PATH_TRAVERSAL",
+      "RFI_EXPLOIT",
+      "WEBSHELL_PROBE",
+      "MALWARE_DOWNLOAD",
+      "VULN_SCANNER"
+    ]
+  },
+  "logs": {
+    "auth_log": "/var/log/auth.log",
+    "apache_access_logs": [
+      "/var/log/apache2/access.log",
+      "/var/log/apache2/other_vhosts_access.log"
+    ],
+    "apache_error_log": "/var/log/apache2/error.log"
+  }
+}

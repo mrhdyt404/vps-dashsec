@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DashSec VPS — Real-Time Cyber Threat Defense & Live Monitoring</title>
+  <meta name="description" content="Sistem Keamanan VPS Real-Time untuk Mendeteksi Serangan, Auto Block IP Mencurigakan, Live Monitoring Dashboard, dan Notifikasi Alert SMTP.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="cyber-theme">
+  <!-- Background Glow & Grid Canvas -->
+  <div class="cyber-grid"></div>
+  <div class="ambient-glow glow-top"></div>
+  <div class="ambient-glow glow-bottom"></div>
+
+  <div class="app-layout">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="top-navbar" id="top-navbar">
+      <div class="nav-brand">
+        <div class="brand-logo">
+          <div class="shield-icon">
+            <span class="shield-pulse"></span>
+            🛡️
+          </div>
+        </div>
+        <div class="brand-text">
+          <h1>DASHSEC <span class="brand-highlight">DEFENSE</span></h1>
+          <span class="brand-sub">VPS INTRUSION PREVENTION &amp; LIVE SOC</span>
+        </div>
+      </div>
+
+      <div class="nav-center-status">
+        <div class="status-pill status-active" id="live-indicator">
+          <span class="pulse-dot"></span>
+          <span class="status-label">DEFENSE ACTIVE</span>
+        </div>
+        <div class="server-meta-tag">
+          <span class="meta-icon">🖥️</span>
+          <span id="nav-server-ip">103.179.56.154</span>
+          <span class="meta-divider">•</span>
+          <span id="nav-hostname">HNTR-VPS</span>
+        </div>
+        <div class="defcon-badge defcon-green" id="defcon-badge">
+          <span class="defcon-title">DEFCON 5</span>
+          <span class="defcon-desc" id="defcon-status">NORMAL</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="cyber-btn cyber-btn-outline" id="btn-sound-toggle" title="Toggle Sound Alerts">
+          <span id="sound-icon">🔊</span> <span id="sound-text">Sound ON</span>
+        </button>
+        <button class="cyber-btn cyber-btn-simulator" id="btn-open-simulator">
+          <span>⚡</span> Attack Simulator
+        </button>
+        <button class="cyber-btn cyber-btn-primary" id="btn-open-smtp">
+          <span>⚙️</span> SMTP Config
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="main-content">
+      
+      <!-- HERO / KPI SUMMARY CARDS -->
+      <section class="kpi-grid" id="kpi-section">
+        <!-- Card 1: Total Attacks -->
+        <div class="kpi-card cyber-card" id="kpi-total-attacks">
+          <div class="kpi-header">
+            <span class="kpi-label">TOTAL SERANGAN TERDETEKSI</span>
+            <span class="kpi-icon icon-cyan">🎯</span>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-value glow-cyan" id="val-total-attacks">0</div>
+            <div class="kpi-meta">
+              <span class="kpi-sub positive" id="val-today-attacks">+0 Hari Ini</span>
+              <span class="kpi-spark">Realtime Log</span>
+            </div>
+          </div>
+          <div class="card-edge-glow cyan"></div>
+        </div>
+
+        <!-- Card 2: Auto Blocked IPs -->
+        <div class="kpi-card cyber-card" id="kpi-active-blocks">
+          <div class="kpi-header">
+            <span class="kpi-label">AUTO-BLOCKED IP (IPTABLES)</span>
+            <span class="kpi-icon icon-green">🛡️</span>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-value glow-green" id="val-active-blocks">0</div>
+            <div class="kpi-meta">
+              <span class="kpi-sub" id="val-blocked-rate">100% Defended</span>
+              <span class="kpi-spark">Kernel DROP</span>
+            </div>
+          </div>
+          <div class="card-edge-glow green"></div>
+        </div>
+
+        <!-- Card 3: Breaches / High Alerts -->
+        <div class="kpi-card cyber-card" id="kpi-breaches">
+          <div class="kpi-header">
+            <span class="kpi-label">SERANGAN BERHASIL / BREACH</span>
+            <span class="kpi-icon icon-red">🚨</span>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-value glow-red" id="val-total-breaches">0</div>
+            <div class="kpi-meta">
+              <span class="kpi-sub danger" id="val-breach-status">0 Insiden Hari Ini</span>
+              <span class="kpi-spark">SMTP Alert</span>
+            </div>
+          </div>
+          <div class="card-edge-glow red"></div>
+        </div>
+
+        <!-- Card 4: VPS System Telemetry -->
+        <div class="kpi-card cyber-card" id="kpi-system-health">
+          <div class="kpi-header">
+            <span class="kpi-label">VPS TELEMETRY &amp; HEALTH</span>
+            <span class="kpi-icon icon-purple">⚡</span>
+          </div>
+          <div class="kpi-body system-metrics-mini">
+            <div class="metric-row">
+              <span class="metric-name">CPU Load</span>
+              <div class="metric-bar-container">
+                <div class="metric-bar" id="cpu-bar" style="width: 15%;"></div>
+              </div>
+              <span class="metric-val" id="val-cpu-load">0.15</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">RAM Usage</span>
+              <div class="metric-bar-container">
+                <div class="metric-bar purple" id="ram-bar" style="width: 42%;"></div>
+              </div>
+              <span class="metric-val" id="val-ram-usage">42%</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-name">Uptime</span>
+              <span class="metric-val font-mono" id="val-uptime">--</span>
+            </div>
+          </div>
+          <div class="card-edge-glow purple"></div>
+        </div>
+      </section>
+
+      <!-- NAVIGATION TABS -->
+      <nav class="dashboard-tabs" id="dashboard-tabs">
+        <button class="tab-btn active" data-tab="tab-live-feed" id="tab-btn-live">
+          <span class="tab-icon">⚡</span> Live Threat Feed &amp; Log
+        </button>
+        <button class="tab-btn" data-tab="tab-blocked-ips" id="tab-btn-blocked">
+          <span class="tab-icon">🚫</span> Blocked IPs Management
+        </button>
+        <button class="tab-btn" data-tab="tab-analytics" id="tab-btn-analytics">
+          <span class="tab-icon">📊</span> Attack Analytics &amp; Geo Map
+        </button>
+        <button class="tab-btn" data-tab="tab-whitelist" id="tab-btn-whitelist">
+          <span class="tab-icon">🛡️</span> Whitelist &amp; Rules
+        </button>
+        <button class="tab-btn" data-tab="tab-smtp" id="tab-btn-smtp-tab">
+          <span class="tab-icon">📧</span> SMTP &amp; Alert Logs
+        </button>
+      </nav>
+
+      <!-- TAB 1: LIVE THREAT STREAM -->
+      <section class="tab-content active" id="tab-live-feed">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2>Real-Time Attack Detection Stream</h2>
+            <p>Memantau aktivitas SSH, Web WAF (SQLi, XSS, LFI), probe exploit, dan koneksi mencurigakan secara instan.</p>
+          </div>
+          <div class="panel-controls">
+            <div class="filter-group">
+              <button class="filter-chip active" data-filter="ALL">Semua (<span id="filter-count-all">0</span>)</button>
+              <button class="filter-chip filter-blocked" data-filter="BLOCKED">🛡️ Diblokir / Gagal (<span id="filter-count-blocked">0</span>)</button>
+              <button class="filter-chip filter-breached" data-filter="BREACHED">🚨 Berhasil / Breach (<span id="filter-count-breached">0</span>)</button>
+              <button class="filter-chip filter-monitored" data-filter="MONITORED">⚠️ Dipantau (<span id="filter-count-monitored">0</span>)</button>
+            </div>
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="threat-search-input" placeholder="Cari IP, payload, atau rule..." />
+            </div>
+          </div>
+        </div>
+
+        <div class="threat-feed-container cyber-card">
+          <div class="table-responsive">
+            <table class="cyber-table" id="threat-table">
+              <thead>
+                <tr>
+                  <th style="width: 130px;">WAKTU</th>
+                  <th style="width: 180px;">IP PENYERANG / ASAL</th>
+                  <th style="width: 140px;">STATUS PERTAHANAN</th>
+                  <th style="width: 160px;">VEKTOR SERANGAN</th>
+                  <th style="width: 90px;">PORT</th>
+                  <th>PAYLOAD / CUPLIKAN LOG</th>
+                  <th style="width: 130px;">TINDAKAN</th>
+                </tr>
+              </thead>
+              <tbody id="threat-table-body">
+                <!-- Dynamic Rows Injected by JS -->
+                <tr class="table-empty-row">
+                  <td colspan="7">
+                    <div class="empty-state">
+                      <div class="loader-radar"></div>
+                      <span>Menghubungkan ke Stream Deteksi Real-Time...</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: BLOCKED IPS MANAGEMENT -->
+      <section class="tab-content" id="tab-blocked-ips">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2>Firewall Blocklist (`iptables` DASHSEC_IPS)</h2>
+            <p>Daftar IP yang diblokir secara otomatis oleh sistem pertahanan atau diblokir manual oleh administrator.</p>
+          </div>
+          <div class="panel-controls">
+            <button class="cyber-btn cyber-btn-primary" id="btn-manual-ban">
+              <span>➕</span> Blokir IP Manual
+            </button>
+            <button class="cyber-btn cyber-btn-danger" id="btn-flush-firewall">
+              <span>🗑️</span> Flush Semua Blokir
+            </button>
+          </div>
+        </div>
+
+        <div class="cyber-card">
+          <div class="table-responsive">
+            <table class="cyber-table" id="blocked-table">
+              <thead>
+                <tr>
+                  <th>IP ADDRESS</th>
+                  <th>LOKASI / NEGARA</th>
+                  <th>ALASAN PEMBLOKIRAN</th>
+                  <th>THREAT SCORE</th>
+                  <th>DIBLOKIR PADA</th>
+                  <th>KEDALUWARSA (AUTO-UNBAN)</th>
+                  <th>TIPE</th>
+                  <th style="text-align: center;">AKSI</th>
+                </tr>
+              </thead>
+              <tbody id="blocked-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: ATTACK ANALYTICS & CHARTS -->
+      <section class="tab-content" id="tab-analytics">
+        <div class="analytics-grid">
+          <!-- Chart 1: 24h Timeline -->
+          <div class="cyber-card chart-card full-width">
+            <div class="card-title">
+              <h3>📈 Volume Serangan &amp; Insiden 24 Jam Terakhir</h3>
+              <span class="card-subtitle">Perbandingan serangan yang berhasil diblokir vs ancaman breach</span>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="chart-attack-timeline"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 2: Vectors Doughnut -->
+          <div class="cyber-card chart-card">
+            <div class="card-title">
+              <h3>🎯 Distribusi Vektor Serangan</h3>
+              <span class="card-subtitle">Breakdown berdasarkan signature serangan</span>
+            </div>
+            <div class="chart-wrapper doughnut-wrap">
+              <canvas id="chart-attack-vectors"></canvas>
+            </div>
+          </div>
+
+          <!-- Top Attackers List -->
+          <div class="cyber-card chart-card">
+            <div class="card-title">
+              <h3>🌐 Top Attacker IPs &amp; Asal Negara</h3>
+              <span class="card-subtitle">IP paling agresif menyerang server</span>
+            </div>
+            <div class="top-list" id="top-attackers-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: WHITELIST & RULES -->
+      <section class="tab-content" id="tab-whitelist">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2>Whitelist IP &amp; Aturan Pengecualian</h2>
+            <p>IP tepercaya dalam daftar ini tidak akan pernah diblokir secara otomatis oleh firewall.</p>
+          </div>
+          <div class="panel-controls">
+            <button class="cyber-btn cyber-btn-primary" id="btn-add-whitelist">
+              <span>➕</span> Tambah IP Whitelist
+            </button>
+          </div>
+        </div>
+
+        <div class="whitelist-layout">
+          <div class="cyber-card">
+            <table class="cyber-table" id="whitelist-table">
+              <thead>
+                <tr>
+                  <th>IP / CIDR SUBNET</th>
+                  <th>KETERANGAN / CATATAN</th>
+                  <th>DITAMBAHKAN</th>
+                  <th style="text-align: center;">AKSI</th>
+                </tr>
+              </thead>
+              <tbody id="whitelist-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="cyber-card rules-card">
+            <div class="card-title">
+              <h3>⚙️ Parameter Sensitivitas Deteksi</h3>
+              <span class="card-subtitle">Aturan deteksi otomatis &amp; ambang batas pertahanan</span>
+            </div>
+            <div class="rules-list">
+              <div class="rule-item">
+                <div class="rule-info">
+                  <span class="rule-name">SSH Brute Force Threshold</span>
+                  <span class="rule-desc">Maksimal percobaan login gagal sebelum auto-block</span>
+                </div>
+                <span class="rule-badge">3 Percobaan / 5 Menit</span>
+              </div>
+              <div class="rule-item">
+                <div class="rule-info">
+                  <span class="rule-name">Web WAF Severe Exploit (SQLi, LFI, RFI)</span>
+                  <span class="rule-desc">Tindakan terhadap injeksi SQL atau pembacaan file sensitif</span>
+                </div>
+                <span class="rule-badge danger">Instant Kernel DROP (100% Ban)</span>
+              </div>
+              <div class="rule-item">
+                <div class="rule-info">
+                  <span class="rule-name">Web DoS Rate Limiting</span>
+                  <span class="rule-desc">Ambang batas lonjakan request HTTP dari satu IP</span>
+                </div>
+                <span class="rule-badge warning">&gt;60 Requests / 10 Detik</span>
+              </div>
+              <div class="rule-item">
+                <div class="rule-info">
+                  <span class="rule-name">Durasi Auto-Ban Default</span>
+                  <span class="rule-desc">Masa berlaku blokir sebelum dibuka otomatis</span>
+                </div>
+                <span class="rule-badge">24 Jam (Configurable)</span>
+              </div>
+              <div class="rule-item">
+                <div class="rule-info">
+                  <span class="rule-name">Breach Classifier &amp; SMTP Dispatch</span>
+                  <span class="rule-desc">Kirim email otomatis saat HTTP 200 pada exploit atau SSH unauthorized</span>
+                </div>
+                <span class="rule-badge success">Aktif ke mrhxxx7@gmail.com</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: SMTP & ALERT LOGS -->
+      <section class="tab-content" id="tab-smtp">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2>Konfigurasi Notifikasi SMTP &amp; Riwayat Pengiriman Alert</h2>
+            <p>Pengaturan pengiriman pesan email log serangan ke <code>mrhxxx7@gmail.com</code> melalui protokol SMTP server.</p>
+          </div>
+          <div class="panel-controls">
+            <button class="cyber-btn cyber-btn-primary" id="btn-test-smtp-mail">
+              <span>✉️</span> Uji Coba Kirim Email (Test Alert)
+            </button>
+          </div>
+        </div>
+
+        <div class="smtp-grid">
+          <!-- SMTP Settings Form -->
+          <div class="cyber-card smtp-form-card">
+            <div class="card-title">
+              <h3>⚙️ Parameter SMTP Server</h3>
+              <span class="card-subtitle">Koneksi protokol SMTP server untuk pengiriman alert</span>
+            </div>
+            <form id="smtp-config-form" class="cyber-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="smtp-host">SMTP Host</label>
+                  <input type="text" id="smtp-host" placeholder="smtp.gmail.com atau 127.0.0.1" required>
+                </div>
+                <div class="form-group">
+                  <label for="smtp-port">SMTP Port</label>
+                  <input type="number" id="smtp-port" placeholder="587 / 465 / 25" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="smtp-user">SMTP Username / Email</label>
+                  <input type="text" id="smtp-user" placeholder="username@gmail.com">
+                </div>
+                <div class="form-group">
+                  <label for="smtp-pass">SMTP Password / App Password</label>
+                  <input type="password" id="smtp-pass" placeholder="••••••••••••">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="smtp-sender-email">Sender Email</label>
+                  <input type="email" id="smtp-sender-email" placeholder="dashsec@server.local" required>
+                </div>
+                <div class="form-group">
+                  <label for="smtp-sender-name">Sender Display Name</label>
+                  <input type="text" id="smtp-sender-name" placeholder="DashSec VPS Defense" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="smtp-recipient">Email Penerima Alert (Target Notification)</label>
+                <input type="email" id="smtp-recipient" value="mrhxxx7@gmail.com" required>
+                <small class="form-help">Pesan log dan laporan serangan berhasil masuk/kritis akan dikirim ke alamat ini.</small>
+              </div>
+
+              <div class="form-row checkbox-row">
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="smtp-notify-breach" checked>
+                  <span class="checkmark"></span>
+                  Kirim Notifikasi Segera Saat Serangan Berhasil Masuk (Breach)
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="smtp-notify-block">
+                  <span class="checkmark"></span>
+                  Kirim Notifikasi Untuk Setiap Serangan yang Berhasil Diblokir
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="cyber-btn cyber-btn-primary" id="btn-save-smtp">
+                  <span>💾</span> Simpan Konfigurasi SMTP
+                </button>
+                <span id="smtp-save-status" class="save-status-indicator"></span>
+              </div>
+            </form>
+          </div>
+
+          <!-- Alert Logs History -->
+          <div class="cyber-card alert-logs-card">
+            <div class="card-title">
+              <h3>📜 Riwayat Pengiriman Notifikasi Email</h3>
+              <span class="card-subtitle">Log status pengiriman alert SMTP server</span>
+            </div>
+            <div class="alert-logs-list" id="alert-logs-list">
+              <!-- Dynamically populated -->
+              <div class="empty-state-mini">Belum ada catatan email alert terbaru.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="cyber-footer">
+      <div class="footer-info">
+        <span>🛡️ <strong>DashSec VPS Defense</strong> &bull; Active Intrusion Prevention System</span>
+        <span>Linux iptables Kernel Firewall &bull; Real-Time Socket Telemetry</span>
+      </div>
+      <div class="footer-links">
+        <span id="socket-connection-status" class="connected">● Connected (WebSocket Live)</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL: MANUAL BAN IP -->
+  <div class="cyber-modal" id="modal-manual-ban">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🚫 Blokir IP Manual ke Firewall</h3>
+        <button class="modal-close" data-close="modal-manual-ban">&times;</button>
+      </div>
+      <form id="form-manual-ban">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="ban-ip">Alamat IP Penyerang</label>
+            <input type="text" id="ban-ip" placeholder="e.g. 198.51.100.24" required />
+          </div>
+          <div class="form-group">
+            <label for="ban-reason">Alasan Pemblokiran</label>
+            <input type="text" id="ban-reason" placeholder="e.g. Suspicious scan, malicious requests" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ban-duration">Durasi Blokir (Jam)</label>
+              <select id="ban-duration">
+                <option value="1">1 Jam</option>
+                <option value="6">6 Jam</option>
+                <option value="24" selected>24 Jam (1 Hari)</option>
+                <option value="168">7 Hari</option>
+                <option value="0">Permanen</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ban-threat-score">Threat Score (1-100)</label>
+              <input type="number" id="ban-threat-score" value="100" min="1" max="100" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="cyber-btn cyber-btn-outline" data-close="modal-manual-ban">Batal</button>
+          <button type="submit" class="cyber-btn cyber-btn-danger">Terapkan Blokir (DROP)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD WHITELIST IP -->
+  <div class="cyber-modal" id="modal-add-whitelist">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🛡️ Tambah IP ke Whitelist</h3>
+        <button class="modal-close" data-close="modal-add-whitelist">&times;</button>
+      </div>
+      <form id="form-add-whitelist">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="wl-ip">IP Address atau CIDR Subnet</label>
+            <input type="text" id="wl-ip" placeholder="e.g. 180.248.111.231 atau 192.168.1.0/24" required />
+          </div>
+          <div class="form-group">
+            <label for="wl-note">Catatan / Identitas</label>
+            <input type="text" id="wl-note" placeholder="e.g. Admin Home IP, Office Subnet" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="cyber-btn cyber-btn-outline" data-close="modal-add-whitelist">Batal</button>
+          <button type="submit" class="cyber-btn cyber-btn-primary">Simpan ke Whitelist</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ATTACK SIMULATOR -->
+  <div class="cyber-modal" id="modal-simulator">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3>⚡ Security Threat &amp; Intrusion Simulator</h3>
+        <button class="modal-close" data-close="modal-simulator">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Gunakan simulator ini untuk menguji secara langsung sistem deteksi real-time, auto-block <code>iptables</code>, dan notifikasi email SMTP ke <strong>mrhxxx7@gmail.com</strong>.</p>
+        
+        <div class="sim-grid">
+          <!-- Sim 1: SSH Brute Force -->
+          <div class="sim-card">
+            <div class="sim-badge badge-warning">SSH Vector</div>
+            <h4>SSH Brute Force Attack</h4>
+            <p>Mensimulasikan 4x percobaan login SSH gagal berturut-turut untuk menguji pemicu auto-block firewall.</p>
+            <button class="cyber-btn cyber-btn-outline btn-run-sim" data-sim="SSH_BRUTE_FORCE">
+              <span>🚀</span> Jalankan Uji SSH
+            </button>
+          </div>
+
+          <!-- Sim 2: SQL Injection Probe -->
+          <div class="sim-card">
+            <div class="sim-badge badge-danger">WAF Vector</div>
+            <h4>SQL Injection Exploit Probe</h4>
+            <p>Mensimulasikan payload SQL Injection (<code>UNION SELECT 1,username...</code>) pada web server.</p>
+            <button class="cyber-btn cyber-btn-outline btn-run-sim" data-sim="SQL_INJECTION">
+              <span>🚀</span> Jalankan Uji SQLi
+            </button>
+          </div>
+
+          <!-- Sim 3: Directory Traversal LFI -->
+          <div class="sim-card">
+            <div class="sim-badge badge-danger">WAF Vector</div>
+            <h4>Path Traversal / LFI Attempt</h4>
+            <p>Mensimulasikan upaya pembacaan file sensitif sistem (<code>/../../etc/passwd</code>).</p>
+            <button class="cyber-btn cyber-btn-outline btn-run-sim" data-sim="PATH_TRAVERSAL">
+              <span>🚀</span> Jalankan Uji Traversal
+            </button>
+          </div>
+
+          <!-- Sim 4: Vulnerability Scanner -->
+          <div class="sim-card">
+            <div class="sim-badge badge-info">Recon Vector</div>
+            <h4>Nikto / Security Scanner</h4>
+            <p>Mensimulasikan aktivitas pemindaian kerentanan web bot otomatis.</p>
+            <button class="cyber-btn cyber-btn-outline btn-run-sim" data-sim="VULN_SCANNER">
+              <span>🚀</span> Jalankan Uji Scanner
+            </button>
+          </div>
+
+          <!-- Sim 5: Critical Breach & Email Dispatch -->
+          <div class="sim-card sim-card-highlight">
+            <div class="sim-badge badge-critical">🚨 CRITICAL BREACH ALERT</div>
+            <h4>Simulasi Serangan Berhasil (Breach) &amp; Kirim Email</h4>
+            <p>Mensimulasikan status serangan kritis lolos dan <strong>mengirimkan email peringatan darurat SMTP langsung ke mrhxxx7@gmail.com</strong>.</p>
+            <button class="cyber-btn cyber-btn-danger btn-run-sim" data-sim="BREACH_ALERT">
+              <span>🚨</span> Jalankan Simulasi Breach &amp; Kirim Email
+            </button>
+          </div>
+        </div>
+
+        <div class="sim-result-box" id="sim-result-box" style="display: none;">
+          <div class="sim-result-title">Hasil Eksekusi Simulasi:</div>
+          <div class="sim-result-content" id="sim-result-content"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="cyber-btn cyber-btn-primary" data-close="modal-simulator">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL FOR LOG -->
+  <div class="cyber-modal" id="modal-threat-detail">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🔍 Detail Forensik Insiden Keamanan</h3>
+        <button class="modal-close" data-close="modal-threat-detail">&times;</button>
+      </div>
+      <div class="modal-body" id="threat-detail-body">
+        <!-- Injected by JS -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="cyber-btn cyber-btn-primary" data-close="modal-threat-detail">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- App Script -->
+  <script src="js/app.js"></script>
+</body>
+</html>

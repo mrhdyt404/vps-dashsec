@@ -1,0 +1,7 @@
+node_modules/
+dashsec.db
+dashsec.db-journal
+dashsec.db-wal
+dashsec.db-shm
+*.log
+.DS_Store
