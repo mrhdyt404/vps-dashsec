@@ -318,7 +318,17 @@ class AlertNotifier {
         details: `Test Email Success: ${info.messageId}`
       });
 
-      return { success: true, message: `Email uji coba berhasil dikirim ke ${recipient}!`, messageId: info.messageId };
+      const isDirectRelay = Boolean(smtpSettings.auth_user && smtpSettings.auth_pass);
+      const message = isDirectRelay
+        ? `✅ Email uji coba berhasil dikirim langsung via SMTP Relay (${smtpSettings.host}:${smtpSettings.port}) ke ${recipient}!`
+        : `⚠️ Email terkirim ke antrean lokal Postfix, namun provider VPS Anda memblokir Port 25 keluar. Untuk menerima email di Inbox Gmail, harap isi Akun & App Password SMTP (Port 587/465) pada form SMTP.`;
+
+      return {
+        success: true,
+        message,
+        messageId: info.messageId,
+        isDirectRelay
+      };
     } catch (err) {
       db.addAlertLog({
         recipient,
