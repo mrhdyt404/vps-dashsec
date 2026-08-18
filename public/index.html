@@ -157,6 +157,9 @@
         <button class="tab-btn active" data-tab="tab-live-feed" id="tab-btn-live">
           <span class="tab-icon">⚡</span> Live Threat Feed &amp; Log
         </button>
+        <button class="tab-btn" data-tab="tab-ml-defense" id="tab-btn-ml">
+          <span class="tab-icon">🧠</span> Machine Learning &amp; AI
+        </button>
         <button class="tab-btn" data-tab="tab-blocked-ips" id="tab-btn-blocked">
           <span class="tab-icon">🚫</span> Blocked IPs Management
         </button>
@@ -218,6 +221,105 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: MACHINE LEARNING & AI DEFENSE -->
+      <section class="tab-content" id="tab-ml-defense">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2>🧠 Machine Learning &amp; AI Adaptive Threat Defense</h2>
+            <p>Mesin pembelajaran online mandiri (Bayesian Intent + Shannon Entropy + Behavioral Velocity) yang terus belajar dari log serangan secara otomatis.</p>
+          </div>
+          <div class="panel-controls">
+            <div class="ml-sensitivity-control">
+              <span style="font-size:12px; color:var(--text-secondary); font-weight:600;">Sensitivitas ML:</span>
+              <select id="ml-sensitivity-select" class="cyber-select-sm">
+                <option value="AGGRESSIVE">🔥 Agresif (Ambang 70%)</option>
+                <option value="BALANCED" selected>⚖️ Seimbang (Ambang 80%)</option>
+                <option value="CONSERVATIVE">🛡️ Konservatif (Ambang 88%)</option>
+              </select>
+            </div>
+            <button class="cyber-btn cyber-btn-primary" id="btn-ml-optimize">
+              <span>⚡</span> Optimalkan Model ML
+            </button>
+          </div>
+        </div>
+
+        <!-- ML KPI Cards -->
+        <div class="ml-kpi-grid">
+          <div class="cyber-card ml-kpi-card">
+            <span class="kpi-label">SAMPEL DIPELAJARI (SELF-LEARNED)</span>
+            <div class="kpi-value glow-cyan" id="ml-total-samples">0</div>
+            <span class="kpi-meta" id="ml-vocab-meta">Vocab: 0 Tokens Malicious</span>
+          </div>
+          <div class="cyber-card ml-kpi-card">
+            <span class="kpi-label">ANOMALI TERDETEKSI OLEH AI</span>
+            <div class="kpi-value glow-red" id="ml-total-anomalies">0</div>
+            <span class="kpi-meta" id="ml-anomalies-meta">Anomalous Traffic</span>
+          </div>
+          <div class="cyber-card ml-kpi-card">
+            <span class="kpi-label">AUTO-BLOCKED BY ML (PREEMPTIVE)</span>
+            <div class="kpi-value glow-green" id="ml-total-preemptives">0</div>
+            <span class="kpi-meta">Kernel DROP Otomatis</span>
+          </div>
+          <div class="cyber-card ml-kpi-card">
+            <span class="kpi-label">RATA-RATA AKURASI &amp; ENTROPI</span>
+            <div class="kpi-value" style="color:var(--cyber-purple);" id="ml-accuracy-score">94.8%</div>
+            <span class="kpi-meta" id="ml-entropy-meta">Entropy Baseline: 3.42</span>
+          </div>
+        </div>
+
+        <!-- ML Feature Breakdown & IP Reputation Layout -->
+        <div class="ml-layout-grid">
+          <!-- ML Dynamic IP Reputation -->
+          <div class="cyber-card">
+            <div class="card-title">
+              <h3>🎯 Dynamic IP Reputation &amp; Risk Scoring</h3>
+              <span class="card-subtitle">Skor kepercayaan adaptif yang dipelajari mesin (0 = Bahaya, 100 = Bersih)</span>
+            </div>
+            <div class="table-responsive">
+              <table class="cyber-table" id="ml-reputation-table">
+                <thead>
+                  <tr>
+                    <th>IP ADDRESS</th>
+                    <th>REPUTASI AI</th>
+                    <th>TOTAL REQUEST</th>
+                    <th>ANOMALY COUNT</th>
+                    <th>STATUS RISIKO</th>
+                  </tr>
+                </thead>
+                <tbody id="ml-reputation-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ML Live Decision Feed -->
+          <div class="cyber-card">
+            <div class="card-title">
+              <h3>⚡ Live ML Anomaly Inferences</h3>
+              <span class="card-subtitle">Analisis feature vector &amp; probabilitas model secara real-time</span>
+            </div>
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+              <table class="cyber-table" id="ml-insights-table">
+                <thead>
+                  <tr>
+                    <th>WAKTU</th>
+                    <th>IP</th>
+                    <th>ANOMALY SCORE</th>
+                    <th>KLASIFIKASI</th>
+                    <th>ENTROPI</th>
+                    <th>TINDAKAN AI</th>
+                  </tr>
+                </thead>
+                <tbody id="ml-insights-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
@@ -610,7 +712,17 @@
             </button>
           </div>
 
-          <!-- Sim 5: Critical Breach & Email Dispatch -->
+          <!-- Sim 5: ML AI Zero-Day Exploit -->
+          <div class="sim-card" style="border-color: var(--cyber-purple);">
+            <div class="sim-badge" style="background: rgba(168, 85, 247, 0.2); color: var(--cyber-purple);">🧠 AI / ML Vector</div>
+            <h4>Uji Zero-Day Obfuscated (ML Anomaly)</h4>
+            <p>Mensimulasikan payload obfuscated / multi-layer encoded dengan entropi tinggi untuk menguji deteksi Machine Learning.</p>
+            <button class="cyber-btn cyber-btn-simulator btn-run-sim" data-sim="ML_ZERO_DAY">
+              <span>🧠</span> Uji Deteksi Mesin Learning
+            </button>
+          </div>
+
+          <!-- Sim 6: Critical Breach & Email Dispatch -->
           <div class="sim-card sim-card-highlight">
             <div class="sim-badge badge-critical">🚨 CRITICAL BREACH ALERT</div>
             <h4>Simulasi Serangan Berhasil (Breach) &amp; Kirim Email</h4>

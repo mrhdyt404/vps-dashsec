@@ -986,6 +986,79 @@ body {
   color: var(--text-muted);
 }
 
+/* ML INTELLIGENCE SECTION STYLES */
+.ml-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ml-kpi-card {
+  padding: 16px 20px;
+}
+
+.ml-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 20px;
+}
+
+.ml-sensitivity-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cyber-select-sm {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  outline: none;
+}
+
+.cyber-select-sm:focus {
+  border-color: var(--cyber-cyan);
+}
+
+.badge-preemptive {
+  background: rgba(255, 0, 85, 0.25);
+  color: var(--cyber-red);
+  border: 1px solid var(--cyber-red);
+  box-shadow: 0 0 8px rgba(255, 0, 85, 0.3);
+  font-weight: bold;
+}
+
+.badge-suspicious {
+  background: rgba(255, 183, 0, 0.2);
+  color: var(--cyber-amber);
+  border: 1px solid rgba(255, 183, 0, 0.3);
+}
+
+.badge-benign {
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--cyber-green);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.reputation-meter {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.rep-high { background: rgba(0, 255, 136, 0.15); color: var(--cyber-green); }
+.rep-med { background: rgba(255, 183, 0, 0.15); color: var(--cyber-amber); }
+.rep-low { background: rgba(255, 0, 85, 0.2); color: var(--cyber-red); }
+
 /* MODALS */
 .cyber-modal {
   position: fixed;

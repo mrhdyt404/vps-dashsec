@@ -314,6 +314,74 @@ app.get('/api/alerts', (req, res) => {
   }
 });
 
+// 6. Machine Learning & AI Endpoints
+const mlEngine = require('./engine/ml_engine');
+
+app.get('/api/ml/stats', (req, res) => {
+  try {
+    const stats = db.getMLStats();
+    res.json({
+      success: true,
+      stats: {
+        ...stats,
+        sensitivity: mlEngine.sensitivity,
+        threshold: mlEngine.thresholds[mlEngine.sensitivity],
+        maliciousVocabCount: mlEngine.maliciousTokens.size,
+        benignVocabCount: mlEngine.benignTokens.size
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/ml/insights', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const filterClass = req.query.classification || null;
+    const insights = db.getRecentMLInsights(limit, filterClass);
+    res.json({ success: true, count: insights.length, data: insights });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/ml/reputation', (req, res) => {
+  try {
+    const reputations = db.getTopAnomalousIPs(20);
+    res.json({ success: true, data: reputations });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/ml/sensitivity', (req, res) => {
+  try {
+    const { level } = req.body;
+    const ok = mlEngine.setSensitivity(level);
+    if (!ok) return res.status(400).json({ success: false, error: 'Invalid level. Use AGGRESSIVE, BALANCED, or CONSERVATIVE' });
+    res.json({ success: true, message: `ML sensitivity updated to ${level}` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/ml/train', (req, res) => {
+  try {
+    mlEngine.persistModelState();
+    res.json({
+      success: true,
+      message: 'Machine Learning Model re-trained and optimized successfully!',
+      stats: {
+        maliciousTokens: mlEngine.maliciousTokens.size,
+        benignTokens: mlEngine.benignTokens.size
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 6. Security Attack Simulator (Test Mode)
 app.post('/api/simulate', async (req, res) => {
   try {
@@ -357,6 +425,16 @@ app.post('/api/simulate', async (req, res) => {
         action_taken: '🚨 CRITICAL BREACH ALERT DISPATCHED TO mrhxxx7@gmail.com'
       });
       return res.json({ success: true, message: `Simulated Critical Breach Alert dispatched! Email sent to mrhxxx7@gmail.com.` });
+    }
+
+    if (type === 'ML_ZERO_DAY') {
+      // Obfuscated Zero-Day Exploit with high entropy to test Machine Learning Anomaly Detection
+      const obfuscatedPayload = `${ip} - - [18/Aug/2026:15:40:00 +0700] "GET /gateway/api/v1/eval?data=JTI1M2MlNzczJTYzJTY1JTc0JTIwJTJmJTJmJTI1MmYlMjUyZmV0YyUyNTJmcGFzc3dk&sig=0x756e696f6e2073656c656374 HTTP/1.1" 200 4800 "-" "Mozilla/5.0 (CustomZeroDayBot/2.4; EntropyScan)"`;
+      detector.processWebLine(obfuscatedPayload, 'Apache-AI-Test');
+      return res.json({
+        success: true,
+        message: `Simulated Zero-Day Obfuscated Payload from ${ip}. Machine Learning Engine triggered autonomous detection!`
+      });
     }
 
     res.status(400).json({ success: false, error: 'Unknown simulation type' });

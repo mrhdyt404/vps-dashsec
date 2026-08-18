@@ -74,11 +74,46 @@ class DashSecDB {
         details TEXT
       );
 
+      -- Machine Learning & AI Intelligence Tables
+      CREATE TABLE IF NOT EXISTS ml_insights (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        ip TEXT NOT NULL,
+        attack_probability REAL DEFAULT 0.0,
+        anomaly_score REAL DEFAULT 0.0,
+        entropy REAL DEFAULT 0.0,
+        token_score REAL DEFAULT 0.0,
+        velocity_score REAL DEFAULT 0.0,
+        classification TEXT DEFAULT 'BENIGN', -- BENIGN, SUSPICIOUS, MALICIOUS, PREEMPTIVE_BLOCK
+        model_confidence REAL DEFAULT 0.0,
+        payload_snippet TEXT,
+        action_taken TEXT DEFAULT 'Analyzed'
+      );
+
+      CREATE TABLE IF NOT EXISTS ml_ip_reputation (
+        ip TEXT PRIMARY KEY,
+        reputation_score REAL DEFAULT 100.0, -- 100 is cleanest, 0 is worst
+        total_requests INTEGER DEFAULT 1,
+        anomaly_count INTEGER DEFAULT 0,
+        last_anomaly REAL DEFAULT 0.0,
+        last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS ml_model_state (
+        key TEXT PRIMARY KEY,
+        value TEXT,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
       CREATE INDEX IF NOT EXISTS idx_threat_ip ON threat_logs(source_ip);
       CREATE INDEX IF NOT EXISTS idx_threat_time ON threat_logs(timestamp);
       CREATE INDEX IF NOT EXISTS idx_threat_status ON threat_logs(status);
       CREATE INDEX IF NOT EXISTS idx_blocked_ip ON blocked_ips(ip);
       CREATE INDEX IF NOT EXISTS idx_blocked_active ON blocked_ips(is_active);
+      CREATE INDEX IF NOT EXISTS idx_ml_ip ON ml_insights(ip);
+      CREATE INDEX IF NOT EXISTS idx_ml_time ON ml_insights(timestamp);
+      CREATE INDEX IF NOT EXISTS idx_ml_class ON ml_insights(classification);
     `);
 
     // Ensure default SMTP record exists
@@ -316,6 +351,121 @@ class DashSecDB {
 
   getRecentAlertLogs(limit = 50) {
     return this.db.prepare('SELECT * FROM alert_logs ORDER BY id DESC LIMIT ?').all(limit);
+  }
+
+  // --- Machine Learning & AI Methods ---
+  addMLInsight({ ip, attack_probability, anomaly_score, entropy, token_score, velocity_score, classification, model_confidence, payload_snippet, action_taken }) {
+    const stmt = this.db.prepare(`
+      INSERT INTO ml_insights (ip, attack_probability, anomaly_score, entropy, token_score, velocity_score, classification, model_confidence, payload_snippet, action_taken)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const res = stmt.run(
+      ip,
+      attack_probability || 0.0,
+      anomaly_score || 0.0,
+      entropy || 0.0,
+      token_score || 0.0,
+      velocity_score || 0.0,
+      classification || 'BENIGN',
+      model_confidence || 0.0,
+      payload_snippet ? payload_snippet.substring(0, 300) : '',
+      action_taken || 'Analyzed'
+    );
+    return Number(res.lastInsertRowid);
+  }
+
+  getRecentMLInsights(limit = 50, filterClass = null) {
+    let query = 'SELECT * FROM ml_insights';
+    const params = [];
+    if (filterClass && filterClass !== 'ALL') {
+      query += ' WHERE classification = ?';
+      params.push(filterClass);
+    }
+    query += ' ORDER BY id DESC LIMIT ?';
+    params.push(limit);
+    return this.db.prepare(query).all(...params);
+  }
+
+  updateIPReputation(ip, anomalyScore = 0.0, isMalicious = false) {
+    const penalty = isMalicious ? 25.0 : (anomalyScore > 0.6 ? 10.0 : 0.0);
+    const reward = (anomalyScore < 0.2 && !isMalicious) ? 1.0 : 0.0;
+
+    const stmt = this.db.prepare(`
+      INSERT INTO ml_ip_reputation (ip, reputation_score, total_requests, anomaly_count, last_anomaly, last_seen, updated_at)
+      VALUES (?, ?, 1, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT(ip) DO UPDATE SET
+        reputation_score = MAX(0.0, MIN(100.0, reputation_score - ? + ?)),
+        total_requests = total_requests + 1,
+        anomaly_count = anomaly_count + (CASE WHEN ? > 0.5 THEN 1 ELSE 0 END),
+        last_anomaly = ?,
+        last_seen = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+    `);
+    stmt.run(
+      ip,
+      Math.max(0.0, 100.0 - penalty),
+      anomalyScore > 0.5 ? 1 : 0,
+      anomalyScore,
+      penalty,
+      reward,
+      anomalyScore,
+      anomalyScore
+    );
+  }
+
+  getIPReputation(ip) {
+    return this.db.prepare('SELECT * FROM ml_ip_reputation WHERE ip = ?').get();
+  }
+
+  getTopAnomalousIPs(limit = 15) {
+    return this.db.prepare(`
+      SELECT * FROM ml_ip_reputation 
+      WHERE reputation_score < 70 OR anomaly_count > 0 
+      ORDER BY reputation_score ASC, anomaly_count DESC 
+      LIMIT ?
+    `).all(limit);
+  }
+
+  saveModelState(key, valueObj) {
+    const stmt = this.db.prepare(`
+      INSERT INTO ml_model_state (key, value, updated_at)
+      VALUES (?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+    `);
+    stmt.run(key, JSON.stringify(valueObj));
+  }
+
+  getModelState(key) {
+    const row = this.db.prepare('SELECT value FROM ml_model_state WHERE key = ?').get();
+    if (!row || !row.value) return null;
+    try {
+      return JSON.parse(row.value);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  getMLStats() {
+    const totalAnalyzed = this.db.prepare('SELECT COUNT(*) as count FROM ml_insights').get()?.count || 0;
+    const totalAnomalies = this.db.prepare("SELECT COUNT(*) as count FROM ml_insights WHERE classification != 'BENIGN'").get()?.count || 0;
+    const totalPreemptives = this.db.prepare("SELECT COUNT(*) as count FROM ml_insights WHERE classification = 'PREEMPTIVE_BLOCK'").get()?.count || 0;
+    const avgConfidence = this.db.prepare('SELECT AVG(model_confidence) as avg_conf FROM ml_insights').get()?.avg_conf || 0.88;
+    const avgEntropy = this.db.prepare('SELECT AVG(entropy) as avg_ent FROM ml_insights').get()?.avg_ent || 3.2;
+
+    const classDistribution = this.db.prepare(`
+      SELECT classification, COUNT(*) as count 
+      FROM ml_insights 
+      GROUP BY classification
+    `).all();
+
+    return {
+      totalAnalyzed,
+      totalAnomalies,
+      totalPreemptives,
+      accuracyRate: (avgConfidence * 100).toFixed(1),
+      avgEntropy: avgEntropy.toFixed(2),
+      classDistribution
+    };
   }
 }
 

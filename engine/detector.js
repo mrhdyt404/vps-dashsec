@@ -5,6 +5,7 @@ const https = require('node:https');
 const db = require('./database');
 const firewall = require('./firewall');
 const notifier = require('./notifier');
+const mlEngine = require('./ml_engine');
 const config = require('../config.json');
 
 class ThreatDetector {
@@ -393,6 +394,11 @@ class ThreatDetector {
       }
     }
 
+    // --- MACHINE LEARNING & AI REAL-TIME INFERENCE ---
+    const mlResult = mlEngine.analyzeRequest({ ip, requestLine, userAgent, rawLine, statusCode });
+    this.broadcast('ML_INSIGHT', mlResult);
+
+    // If static rule matched, handle threat event
     if (attackType) {
       const status = isBreach ? 'BREACHED' : (statusCode >= 400 || statusCode === 301 ? 'BLOCKED' : 'BLOCKED');
       this.handleThreatEvent({
@@ -405,6 +411,23 @@ class ThreatDetector {
         status,
         rule_name: ruleName,
         action_taken: isBreach ? '🚨 BREACH ALERT DISPATCHED TO SMTP' : 'Auto-Blocked & Defended',
+        isHydrating
+      });
+      return;
+    }
+
+    // If no static rule matched, but ML Anomaly detected a zero-day / bot exploit:
+    if (mlResult.isPreemptiveBan) {
+      this.handleThreatEvent({
+        ip,
+        attack_type: 'ML_ANOMALY_PREEMPTIVE_BLOCK',
+        target_port: 80,
+        service: 'HTTP-AI-WAF',
+        payload: `ML AI Detection (Anomaly: ${Math.round(mlResult.anomalyScore * 100)}%, Entropy: ${mlResult.entropy}, BayesProb: ${Math.round(mlResult.attackProbability * 100)}%) | Request: "${requestLine}"`,
+        severity: 'CRITICAL',
+        status: 'BLOCKED',
+        rule_name: `Machine Learning Autonomous Defense (Confidence: ${Math.round(mlResult.confidence * 100)}%)`,
+        action_taken: mlResult.actionTaken,
         isHydrating
       });
     }
